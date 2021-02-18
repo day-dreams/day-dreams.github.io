@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="来谈谈rpc框架设计 来谈谈rpc框架设计  其实目前使用过的，也就是grpc和厂内的Xrpc。在感官上，其实结构都差不多，所以忍不住要看看，市面上流行的rpc都有什么差别。 rpc应该包含哪些范畴几种主流rpc的大概框架服务注册、服务发现和负载均衡同步异步、流式非流式协议编解码无损重启参考与引用 Brpc https:&#x2F;&#x2F;github.com&#x2F;apache&#x2F;incubator-brpc&#x2F;blob">
+<meta property="og:type" content="article">
+<meta property="og:title" content="来谈谈rpc框架设计">
+<meta property="og:url" content="http://example.com/2021/02/18/rpc/index.html">
+<meta property="og:site_name" content="day-dreams">
+<meta property="og:description" content="来谈谈rpc框架设计 来谈谈rpc框架设计  其实目前使用过的，也就是grpc和厂内的Xrpc。在感官上，其实结构都差不多，所以忍不住要看看，市面上流行的rpc都有什么差别。 rpc应该包含哪些范畴几种主流rpc的大概框架服务注册、服务发现和负载均衡同步异步、流式非流式协议编解码无损重启参考与引用 Brpc https:&#x2F;&#x2F;github.com&#x2F;apache&#x2F;incubator-brpc&#x2F;blob">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-18T22:50:55.000Z">
+<meta property="article:modified_time" content="2021-02-18T14:56:51.634Z">
+<meta property="article:author" content="day-dreams">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>来谈谈rpc框架设计</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+      
+<link rel="stylesheet" href="/css/rtl.css">
+
+    
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2021/02/18/key-list/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2021/02/18/rpc/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/02/18/rpc/&text=来谈谈rpc框架设计"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/02/18/rpc/&is_video=false&description=来谈谈rpc框架设计"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=来谈谈rpc框架设计&body=Check out this article: http://example.com/2021/02/18/rpc/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/02/18/rpc/&name=来谈谈rpc框架设计&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/02/18/rpc/&t=来谈谈rpc框架设计"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9D%A5%E8%B0%88%E8%B0%88rpc%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.</span> <span class="toc-text">来谈谈rpc框架设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#rpc%E5%BA%94%E8%AF%A5%E5%8C%85%E5%90%AB%E5%93%AA%E4%BA%9B%E8%8C%83%E7%95%B4"><span class="toc-number">1.1.</span> <span class="toc-text">rpc应该包含哪些范畴</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%A0%E7%A7%8D%E4%B8%BB%E6%B5%81rpc%E7%9A%84%E5%A4%A7%E6%A6%82%E6%A1%86%E6%9E%B6"><span class="toc-number">1.2.</span> <span class="toc-text">几种主流rpc的大概框架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E3%80%81%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="toc-number">1.3.</span> <span class="toc-text">服务注册、服务发现和负载均衡</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E5%BC%82%E6%AD%A5%E3%80%81%E6%B5%81%E5%BC%8F%E9%9D%9E%E6%B5%81%E5%BC%8F"><span class="toc-number">1.4.</span> <span class="toc-text">同步异步、流式非流式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%8F%E8%AE%AE%E7%BC%96%E8%A7%A3%E7%A0%81"><span class="toc-number">1.5.</span> <span class="toc-text">协议编解码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A0%E6%8D%9F%E9%87%8D%E5%90%AF"><span class="toc-number">1.6.</span> <span class="toc-text">无损重启</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.7.</span> <span class="toc-text"></span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E4%B8%8E%E5%BC%95%E7%94%A8"><span class="toc-number">1.8.</span> <span class="toc-text">参考与引用</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        来谈谈rpc框架设计
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">day-dreams</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2021-02-18T22:50:55.000Z" itemprop="datePublished">2021-02-18</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="来谈谈rpc框架设计"><a href="#来谈谈rpc框架设计" class="headerlink" title="来谈谈rpc框架设计"></a>来谈谈rpc框架设计</h1><ul>
+<li><a href="#%E6%9D%A5%E8%B0%88%E8%B0%88rpc%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1">来谈谈rpc框架设计</a></li>
+</ul>
+<p>其实目前使用过的，也就是grpc和厂内的Xrpc。在感官上，其实结构都差不多，所以忍不住要看看，市面上流行的rpc都有什么差别。</p>
+<h2 id="rpc应该包含哪些范畴"><a href="#rpc应该包含哪些范畴" class="headerlink" title="rpc应该包含哪些范畴"></a>rpc应该包含哪些范畴</h2><h2 id="几种主流rpc的大概框架"><a href="#几种主流rpc的大概框架" class="headerlink" title="几种主流rpc的大概框架"></a>几种主流rpc的大概框架</h2><h2 id="服务注册、服务发现和负载均衡"><a href="#服务注册、服务发现和负载均衡" class="headerlink" title="服务注册、服务发现和负载均衡"></a>服务注册、服务发现和负载均衡</h2><h2 id="同步异步、流式非流式"><a href="#同步异步、流式非流式" class="headerlink" title="同步异步、流式非流式"></a>同步异步、流式非流式</h2><h2 id="协议编解码"><a href="#协议编解码" class="headerlink" title="协议编解码"></a>协议编解码</h2><h2 id="无损重启"><a href="#无损重启" class="headerlink" title="无损重启"></a>无损重启</h2><h2 id=""><a href="#" class="headerlink" title=""></a></h2><h2 id="参考与引用"><a href="#参考与引用" class="headerlink" title="参考与引用"></a>参考与引用</h2><ul>
+<li>Brpc <a target="_blank" rel="noopener" href="https://github.com/apache/incubator-brpc/blob/master/README_cn.md">https://github.com/apache/incubator-brpc/blob/master/README_cn.md</a></li>
+<li>Grpc <a target="_blank" rel="noopener" href="https://github.com/grpc/grpc-go">https://github.com/grpc/grpc-go</a></li>
+<li>Go-micro <a target="_blank" rel="noopener" href="https://github.com/micro/micro">https://github.com/micro/micro</a></li>
+<li>Thrift <a target="_blank" rel="noopener" href="https://thrift.apache.org/">https://thrift.apache.org/</a></li>
+<li>Dubbo <a target="_blank" rel="noopener" href="https://dubbo.apache.org/docs/v2.7/user/">https://dubbo.apache.org/docs/v2.7/user/</a></li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9D%A5%E8%B0%88%E8%B0%88rpc%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.</span> <span class="toc-text">来谈谈rpc框架设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#rpc%E5%BA%94%E8%AF%A5%E5%8C%85%E5%90%AB%E5%93%AA%E4%BA%9B%E8%8C%83%E7%95%B4"><span class="toc-number">1.1.</span> <span class="toc-text">rpc应该包含哪些范畴</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%A0%E7%A7%8D%E4%B8%BB%E6%B5%81rpc%E7%9A%84%E5%A4%A7%E6%A6%82%E6%A1%86%E6%9E%B6"><span class="toc-number">1.2.</span> <span class="toc-text">几种主流rpc的大概框架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E3%80%81%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="toc-number">1.3.</span> <span class="toc-text">服务注册、服务发现和负载均衡</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E5%BC%82%E6%AD%A5%E3%80%81%E6%B5%81%E5%BC%8F%E9%9D%9E%E6%B5%81%E5%BC%8F"><span class="toc-number">1.4.</span> <span class="toc-text">同步异步、流式非流式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%8F%E8%AE%AE%E7%BC%96%E8%A7%A3%E7%A0%81"><span class="toc-number">1.5.</span> <span class="toc-text">协议编解码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A0%E6%8D%9F%E9%87%8D%E5%90%AF"><span class="toc-number">1.6.</span> <span class="toc-text">无损重启</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.7.</span> <span class="toc-text"></span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E4%B8%8E%E5%BC%95%E7%94%A8"><span class="toc-number">1.8.</span> <span class="toc-text">参考与引用</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2021/02/18/rpc/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/02/18/rpc/&text=来谈谈rpc框架设计"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/02/18/rpc/&is_video=false&description=来谈谈rpc框架设计"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=来谈谈rpc框架设计&body=Check out this article: http://example.com/2021/02/18/rpc/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/02/18/rpc/&title=来谈谈rpc框架设计"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/02/18/rpc/&name=来谈谈rpc框架设计&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/02/18/rpc/&t=来谈谈rpc框架设计"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2021
+    day-dreams
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+
+    <!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+
+<!-- clipboard -->
+
+  
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
