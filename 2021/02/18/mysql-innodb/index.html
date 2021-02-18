@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <meta name="description" content="当我们讨论innodb时，我们在讨论什么 当我们讨论innodb时，我们在讨论什么 内存结构 磁盘结构 锁和事务 备份与恢复 复制 一些有趣的问题    我们在讨论这样一个结构:  内存结构 内存结构  Buffer Pool 一个磁盘页缓存 用来干嘛的 innodb扫描磁盘上的表文件或索引文件时，会把磁盘数据加到到内存，加快后续的读取过程 结构如何 Page List 一个指向Page的列表；每">
 <meta property="og:type" content="article">
-<meta property="og:title" content="mysql innodb">
+<meta property="og:title" content="当我们讨论innodb时，我们在讨论什么">
 <meta property="og:url" content="http://example.com/2021/02/18/mysql-innodb/index.html">
 <meta property="og:site_name" content="day-dreams">
 <meta property="og:description" content="当我们讨论innodb时，我们在讨论什么 当我们讨论innodb时，我们在讨论什么 内存结构 磁盘结构 锁和事务 备份与恢复 复制 一些有趣的问题    我们在讨论这样一个结构:  内存结构 内存结构  Buffer Pool 一个磁盘页缓存 用来干嘛的 innodb扫描磁盘上的表文件或索引文件时，会把磁盘数据加到到内存，加快后续的读取过程 结构如何 Page List 一个指向Page的列表；每">
@@ -17,7 +17,7 @@
 <meta property="og:image" content="http://example.com/pics/innodb-buffer-pool-list.png">
 <meta property="og:image" content="http://example.com/pics/innodb-change-buffer.png">
 <meta property="article:published_time" content="2021-02-18T22:45:49.000Z">
-<meta property="article:modified_time" content="2021-02-18T15:01:14.777Z">
+<meta property="article:modified_time" content="2021-02-18T15:05:43.435Z">
 <meta property="article:author" content="day-dreams">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/pics/innodb-architecture.png">
@@ -40,7 +40,7 @@
       
     
     <!-- title -->
-    <title>mysql innodb</title>
+    <title>当我们讨论innodb时，我们在讨论什么</title>
     <!-- styles -->
     
 <link rel="stylesheet" href="/css/style.css">
@@ -95,16 +95,16 @@
     <div id="share" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2021/02/18/mysql-innodb/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/02/18/mysql-innodb/&text=mysql innodb"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/02/18/mysql-innodb/&is_video=false&description=mysql innodb"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=mysql innodb&body=Check out this article: http://example.com/2021/02/18/mysql-innodb/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/02/18/mysql-innodb/&name=mysql innodb&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/02/18/mysql-innodb/&t=mysql innodb"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/02/18/mysql-innodb/&text=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/02/18/mysql-innodb/&is_video=false&description=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=当我们讨论innodb时，我们在讨论什么&body=Check out this article: http://example.com/2021/02/18/mysql-innodb/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/02/18/mysql-innodb/&name=当我们讨论innodb时，我们在讨论什么&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/02/18/mysql-innodb/&t=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
@@ -121,7 +121,7 @@
   <header>
     
     <h1 class="posttitle" itemprop="name headline">
-        mysql innodb
+        当我们讨论innodb时，我们在讨论什么
     </h1>
 
 
@@ -400,16 +400,16 @@
     <div id="share-footer" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2021/02/18/mysql-innodb/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/02/18/mysql-innodb/&text=mysql innodb"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/02/18/mysql-innodb/&is_video=false&description=mysql innodb"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=mysql innodb&body=Check out this article: http://example.com/2021/02/18/mysql-innodb/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=mysql innodb"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/02/18/mysql-innodb/&name=mysql innodb&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/02/18/mysql-innodb/&t=mysql innodb"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/02/18/mysql-innodb/&text=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/02/18/mysql-innodb/&is_video=false&description=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=当我们讨论innodb时，我们在讨论什么&body=Check out this article: http://example.com/2021/02/18/mysql-innodb/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/02/18/mysql-innodb/&title=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/02/18/mysql-innodb/&name=当我们讨论innodb时，我们在讨论什么&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/02/18/mysql-innodb/&t=当我们讨论innodb时，我们在讨论什么"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
