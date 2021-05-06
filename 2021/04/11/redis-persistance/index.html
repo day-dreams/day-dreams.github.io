@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta name="description" content="我一向不关注redis在持久化方面的特性，甚至不知道它是何种方式完成持久化。既然redis是个内存的key value，感觉理解了基本的数据结构原理、网络io模式和集群分片的特性就足够了。 reids持久化实在是没什么卵用。或者说一般人不用。我不信有什么业务是真真正正把redis当持久化存储来用。缓存、kv才是它的领率。 但是我的同事有时就喜欢甩一两个我不懂的redis持久化名词，次数多了，我都觉">
+    <meta name="description" content="我一向不关注redis在持久化方面的特性，甚至不知道它是何种方式完成持久化。既然redis是个内存的key value，感觉理解了基本的数据结构原理、网络io模式和集群分片的特性就足够了。 reids持久化实在是没什么卵用。或者说一般人不用。我不信有什么业务是真真正正把redis当持久化存储来用。缓存、kv才是它的领域。 但是我的同事有时就喜欢甩一两个我不懂的redis持久化名词，次数多了，我都觉">
 <meta property="og:type" content="article">
 <meta property="og:title" content="redis持久化&#x2F;真的是一个值得讨论的话题吗">
 <meta property="og:url" content="http://example.com/2021/04/11/redis-persistance/index.html">
 <meta property="og:site_name" content="day-dreams">
-<meta property="og:description" content="我一向不关注redis在持久化方面的特性，甚至不知道它是何种方式完成持久化。既然redis是个内存的key value，感觉理解了基本的数据结构原理、网络io模式和集群分片的特性就足够了。 reids持久化实在是没什么卵用。或者说一般人不用。我不信有什么业务是真真正正把redis当持久化存储来用。缓存、kv才是它的领率。 但是我的同事有时就喜欢甩一两个我不懂的redis持久化名词，次数多了，我都觉">
+<meta property="og:description" content="我一向不关注redis在持久化方面的特性，甚至不知道它是何种方式完成持久化。既然redis是个内存的key value，感觉理解了基本的数据结构原理、网络io模式和集群分片的特性就足够了。 reids持久化实在是没什么卵用。或者说一般人不用。我不信有什么业务是真真正正把redis当持久化存储来用。缓存、kv才是它的领域。 但是我的同事有时就喜欢甩一两个我不懂的redis持久化名词，次数多了，我都觉">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-04-11T23:59:16.000Z">
-<meta property="article:modified_time" content="2021-04-18T14:33:15.242Z">
+<meta property="article:modified_time" content="2021-05-06T10:59:15.040Z">
 <meta property="article:author" content="day-dreams">
 <meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
@@ -151,7 +151,7 @@
 
   <div class="content" itemprop="articleBody">
     <p>我一向不关注redis在持久化方面的特性，甚至不知道它是何种方式完成持久化。既然redis是个内存的key value，感觉理解了基本的数据结构原理、网络io模式和集群分片的特性就足够了。</p>
-<p>reids持久化实在是没什么卵用。或者说一般人不用。我不信有什么业务是真真正正把redis当持久化存储来用。缓存、kv才是它的领率。</p>
+<p>reids持久化实在是没什么卵用。或者说一般人不用。我不信有什么业务是真真正正把redis当持久化存储来用。缓存、kv才是它的领域。</p>
 <p>但是我的同事有时就喜欢甩一两个我不懂的redis持久化名词，次数多了，我都觉得烦。所以专门来了解下持久化的话题，下次再有人提起，我就可以不屑一顾了。</p>
 <h2 id="官方文档怎么说"><a href="#官方文档怎么说" class="headerlink" title="官方文档怎么说"></a>官方文档怎么说</h2><ul>
 <li>官方文档 <a target="_blank" rel="noopener" href="https://redis.io/topics/persistence">redis persistance</a></li>
