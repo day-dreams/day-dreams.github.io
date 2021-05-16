@@ -19,6 +19,7 @@ tags:
 * Topic 没啥好说的。
 * Particion 一个topic下，有好几个分区，供好几个consumer、producer来操作
 * Broker  代表一个kafka节点。每个节点可以有很多Patition
+* Coordinator 管理一个ConsumerGroup的状态，主要是offset消费情况
 * 一个Topic的数据，可以分散在多个Partition。
   * 为了保证可靠性，每个Partion有1个Leader和若干个Replicas。
   * 所以会出现这样的拓扑图
@@ -46,11 +47,33 @@ ISR集合代表了某个分区的最新状态，Consumer只从ISR集合里拉取
     * `shutdown-idle-replica-alter-log-dirs-thread`
 
 
+## Sarama/SyncProducer
 
+作为Proudcer，各组件之间的关系非常清晰，基本是通过goroutine进行异步交互。上层的Proudcer()，经过层层dispatch之后，会触发真正的Produce请求，给到对应的leader broker。
 
-## Consumer/Consumer Group
+![producer](/pics/kafka_producer_sarama_brokers.png)
+
+以`AsyncProducer`为例，看看Producer的生命周期里，都发生了哪些事情：
+* NewAsyncProducer，初始化Producer
+  * NewClient
+    * 解析配置，从集群列表，随机挑选一个broker，去拉取整个kafka集群的元数据：Topic列表、Partition列表、Parition的Leader/Follower列表
+    * 起一个goroutine，异步更新kafka集群的元数据 
+  * newAsyncProducer，初始化channel
+    * newTransactionManager，向Kafka集发起注册请求，成为一个Producer
+    * 起好几个channel，分别用于input、result、error 
+    * 起dispatcher goroutine。从input channel获取消息，投放到合适的分区leader
+      * 每次收到一个代生产的消息，都先用Client去集群里查询该Topic/Partition的Leader
+      * 拿到Leader后，向Leader写入新消息，并根据配置，等待集群ACK
+    * 起retry goroutine
+      * 有的时候，消息生产可能会失败，专门搞了一个retry channel，存储需要retry的消息
+      * 无脑的从这个retry channel取出消息，然后塞到input channel，触发消息生产
+
+## Sarama/ConsumerGroup
+
+* NewConsumerGroup
 
 ## 实战经验之谈
 
 * 消息体太长，会发生截断吗？如果截断，上层应用程序怎么处理？
 * kafka分区数能改变吗？如果改变了，怎么保证分区顺序一致；如果不能改变，某个分区挂了怎么办
+* consumer rebalance是怎么发生的？最终会如何影响consumer group？
