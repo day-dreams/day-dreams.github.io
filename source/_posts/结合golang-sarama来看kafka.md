@@ -10,9 +10,43 @@ tags:
 
 这次相结合kafka源码、golang saram库，来回顾kafka的特性。
 
-## Partition和Broker
+## 一些概念
 
-## Producer
+结合源码，看看有kafka进行了哪些抽象。 浅尝辄止。
+
+### Broker拓扑图
+
+* Topic 没啥好说的。
+* Particion 一个topic下，有好几个分区，供好几个consumer、producer来操作
+* Broker  代表一个kafka节点。每个节点可以有很多Patition
+* 一个Topic的数据，可以分散在多个Partition。
+  * 为了保证可靠性，每个Partion有1个Leader和若干个Replicas。
+  * 所以会出现这样的拓扑图
+    * Broker1是某个topic的某个Partition leader
+    * 同时Broker1有和其他几个Broker一样，都是某个Topic的某个Partition replicas
+
+![Broker拓扑图](/pics/kafka_broker_topic_partition.png)
+
+### Partition Leader选举和复制备份
+
+基本上，我们关注的就是ISR, InSyncReplicas。
+  * Partition具有1个LeaderBroker+N个FollowerBroker，生产消息时，数据被先写入到Leader，然后等待Follower来主动拉取新数据
+  * 如果Follower拉取数据的速度比较快，可以跟Leader保持数据一致，那么被称为InSyncReplicas(ISR)
+  * ISR保障了数据可靠性，Leader上的数据总可以在某个ISR里找到。所以即使Leader挂了，ISR也可以马上顶上去，称为新的Leader
+  * 根据Follower拉取数据的情况，Leader可以判断Follower的状态
+    * 如果10s内没有来拉过数据(还有其他条件)，Follower很可能已经落后于Leader了。此时Consumer不会再从这个落后的Follower拉取数据
+  
+ISR集合代表了某个分区的最新状态，Consumer只从ISR集合里拉取数据。
+
+![isr](/pics/kafka_isr.png)
+
+* ReplicaManager,作为Broker的核心逻辑之一，负责管理分区状态
+  * 周期性的执行两个逻辑
+    * `isr-expiration` 遍历当前Broker的每个partition，检查同步状态，如果Broker已经落后Leader很多了，就把broker从Partition的ISR集合里踢出去
+    * `shutdown-idle-replica-alter-log-dirs-thread`
+
+
+
 
 ## Consumer/Consumer Group
 
