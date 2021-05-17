@@ -15,8 +15,9 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/pics/kafka_broker_topic_partition.png">
 <meta property="og:image" content="http://example.com/pics/kafka_isr.png">
+<meta property="og:image" content="http://example.com/pics/kafka_producer_sarama_brokers.png">
 <meta property="article:published_time" content="2021-04-29T00:33:45.000Z">
-<meta property="article:modified_time" content="2021-05-16T03:18:21.920Z">
+<meta property="article:modified_time" content="2021-04-29T00:33:45.000Z">
 <meta property="article:author" content="day-dreams">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/pics/kafka_broker_topic_partition.png">
@@ -106,7 +107,7 @@
 
     </div>
     <div id="toc">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consumer-Consumer-Group"><span class="toc-number">2.</span> <span class="toc-text">Consumer&#x2F;Consumer Group</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">3.</span> <span class="toc-text">实战经验之谈</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-SyncProducer"><span class="toc-number">2.</span> <span class="toc-text">Sarama&#x2F;SyncProducer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-ConsumerGroup"><span class="toc-number">3.</span> <span class="toc-text">Sarama&#x2F;ConsumerGroup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">4.</span> <span class="toc-text">实战经验之谈</span></a></li></ol>
     </div>
   </span>
 </div>
@@ -153,6 +154,7 @@
 <li>Topic 没啥好说的。</li>
 <li>Particion 一个topic下，有好几个分区，供好几个consumer、producer来操作</li>
 <li>Broker  代表一个kafka节点。每个节点可以有很多Patition</li>
+<li>Coordinator 管理一个ConsumerGroup的状态，主要是offset消费情况</li>
 <li>一个Topic的数据，可以分散在多个Partition。<ul>
 <li>为了保证可靠性，每个Partion有1个Leader和若干个Replicas。</li>
 <li>所以会出现这样的拓扑图<ul>
@@ -190,9 +192,41 @@
 </ul>
 </li>
 </ul>
-<h2 id="Consumer-Consumer-Group"><a href="#Consumer-Consumer-Group" class="headerlink" title="Consumer/Consumer Group"></a>Consumer/Consumer Group</h2><h2 id="实战经验之谈"><a href="#实战经验之谈" class="headerlink" title="实战经验之谈"></a>实战经验之谈</h2><ul>
+<h2 id="Sarama-SyncProducer"><a href="#Sarama-SyncProducer" class="headerlink" title="Sarama/SyncProducer"></a>Sarama/SyncProducer</h2><p>作为Proudcer，各组件之间的关系非常清晰，基本是通过goroutine进行异步交互。上层的Proudcer()，经过层层dispatch之后，会触发真正的Produce请求，给到对应的leader broker。</p>
+<p><img src="/pics/kafka_producer_sarama_brokers.png" alt="producer"></p>
+<p>以<code>AsyncProducer</code>为例，看看Producer的生命周期里，都发生了哪些事情：</p>
+<ul>
+<li>NewAsyncProducer，初始化Producer<ul>
+<li>NewClient<ul>
+<li>解析配置，从集群列表，随机挑选一个broker，去拉取整个kafka集群的元数据：Topic列表、Partition列表、Parition的Leader/Follower列表</li>
+<li>起一个goroutine，异步更新kafka集群的元数据 </li>
+</ul>
+</li>
+<li>newAsyncProducer，初始化channel<ul>
+<li>newTransactionManager，向Kafka集发起注册请求，成为一个Producer</li>
+<li>起好几个channel，分别用于input、result、error </li>
+<li>起dispatcher goroutine。从input channel获取消息，投放到合适的分区leader<ul>
+<li>每次收到一个代生产的消息，都先用Client去集群里查询该Topic/Partition的Leader</li>
+<li>拿到Leader后，向Leader写入新消息，并根据配置，等待集群ACK</li>
+</ul>
+</li>
+<li>起retry goroutine<ul>
+<li>有的时候，消息生产可能会失败，专门搞了一个retry channel，存储需要retry的消息</li>
+<li>无脑的从这个retry channel取出消息，然后塞到input channel，触发消息生产</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="Sarama-ConsumerGroup"><a href="#Sarama-ConsumerGroup" class="headerlink" title="Sarama/ConsumerGroup"></a>Sarama/ConsumerGroup</h2><ul>
+<li>NewConsumerGroup</li>
+</ul>
+<h2 id="实战经验之谈"><a href="#实战经验之谈" class="headerlink" title="实战经验之谈"></a>实战经验之谈</h2><ul>
 <li>消息体太长，会发生截断吗？如果截断，上层应用程序怎么处理？</li>
 <li>kafka分区数能改变吗？如果改变了，怎么保证分区顺序一致；如果不能改变，某个分区挂了怎么办</li>
+<li>consumer rebalance是怎么发生的？最终会如何影响consumer group？</li>
 </ul>
 
   </div>
@@ -217,7 +251,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consumer-Consumer-Group"><span class="toc-number">2.</span> <span class="toc-text">Consumer&#x2F;Consumer Group</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">3.</span> <span class="toc-text">实战经验之谈</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-SyncProducer"><span class="toc-number">2.</span> <span class="toc-text">Sarama&#x2F;SyncProducer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-ConsumerGroup"><span class="toc-number">3.</span> <span class="toc-text">Sarama&#x2F;ConsumerGroup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">4.</span> <span class="toc-text">实战经验之谈</span></a></li></ol>
     </div>
 
     <div id="share-footer" style="display: none">
