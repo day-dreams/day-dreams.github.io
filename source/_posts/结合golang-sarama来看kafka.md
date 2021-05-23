@@ -72,6 +72,78 @@ ISR集合代表了某个分区的最新状态，Consumer只从ISR集合里拉取
 
 * NewConsumerGroup
 
+## 我用到的封装版本
+
+在内部rpc封装的背景下，我消费kafka消息，实际上是封装了一层。 sarama库要求使用方实现一个consume client，嵌入到sarama的框架。
+
+```golang
+
+// ConsumerGroupHandler instances are used to handle individual topic/partition claims.
+// It also provides hooks for your consumer group session life-cycle and allow you to
+// trigger logic before or after the consume loop(s).
+//
+// PLEASE NOTE that handlers are likely be called from several goroutines concurrently,
+// ensure that all state is safely protected against race conditions.
+type ConsumerGroupHandler interface {
+	// Setup is run at the beginning of a new session, before ConsumeClaim.
+	Setup(ConsumerGroupSession) error
+
+	// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
+	// but before the offsets are committed for the very last time.
+	Cleanup(ConsumerGroupSession) error
+
+	// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+	// Once the Messages() channel is closed, the Handler must finish its processing
+	// loop and exit.
+	ConsumeClaim(ConsumerGroupSession, ConsumerGroupClaim) error
+}
+
+```
+
+我用的封装大概是这个样子:
+
+* 死循环监听msg chan
+  * 把消息放到buffer
+  * 每X条消息，批量消费一次buffer
+  * 每Y秒，批量消费一次buffer
+  * 如果消费成功，标记ok
+  * 如果失败，直接返回，等待下次重新消费消息
+  
+```golang
+func (c* client)ConsumeClaim(session* ConsumerGroupSession, claim *ConsumerGroupClaim)error{
+  buffer:=map[int]msg{}
+  ticker:=ticker.New(time.Second*5)
+  for {
+    select {
+      case msgs :<- claim.msgs:
+        for _,msg := msgs {
+          if len(buffer) > X { // 每X条数据集中消费一次，有错误就返回，下次重新消费整个批次的数据
+            err:= doLogicHandle(buffer)
+            if err!=nil{
+              return 
+            }
+
+            session.MarkOk(buffer) // 消费成功
+          }
+
+          buffer[len(buffer)]=msg
+        }
+      case _ = <- ticker.C: // 定时消费一批数据
+        err:=doLogicHandle(buffer)
+        if err!=nil{
+          return
+        }
+
+        session.MarkOk(buffer) // 消费成功
+
+        delete(buffer)
+    }
+  }
+}
+
+```
+
+
 ## 实战经验之谈
 
 * 消息体太长，会发生截断吗？如果截断，上层应用程序怎么处理？
