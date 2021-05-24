@@ -109,7 +109,7 @@
 
     </div>
     <div id="toc">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-SyncProducer"><span class="toc-number">2.</span> <span class="toc-text">Sarama&#x2F;SyncProducer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-ConsumerGroup"><span class="toc-number">3.</span> <span class="toc-text">Sarama&#x2F;ConsumerGroup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%94%A8%E5%88%B0%E7%9A%84%E5%B0%81%E8%A3%85%E7%89%88%E6%9C%AC"><span class="toc-number">4.</span> <span class="toc-text">我用到的封装版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">5.</span> <span class="toc-text">实战经验之谈</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-SyncProducer"><span class="toc-number">2.</span> <span class="toc-text">Sarama&#x2F;SyncProducer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-ConsumerGroup"><span class="toc-number">3.</span> <span class="toc-text">Sarama&#x2F;ConsumerGroup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%94%A8%E5%88%B0%E7%9A%84%E5%B0%81%E8%A3%85%E7%89%88%E6%9C%AC"><span class="toc-number">4.</span> <span class="toc-text">我用到的封装版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">5.</span> <span class="toc-text">实战经验之谈</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#kafka%E5%88%86%E5%8C%BA%E6%95%B0%E8%83%BD%E6%94%B9%E5%8F%98%E5%90%97"><span class="toc-number">5.1.</span> <span class="toc-text">kafka分区数能改变吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E4%BD%93%E5%A4%AA%E9%95%BF%EF%BC%8C%E4%BC%9A%E5%8F%91%E7%94%9F%E6%88%AA%E6%96%AD%E5%90%97"><span class="toc-number">5.2.</span> <span class="toc-text">消息体太长，会发生截断吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#consumer-rebalance%E6%98%AF%E6%80%8E%E4%B9%88%E5%8F%91%E7%94%9F%E7%9A%84"><span class="toc-number">5.3.</span> <span class="toc-text">consumer rebalance是怎么发生的</span></a></li></ol></li></ol>
     </div>
   </span>
 </div>
@@ -243,11 +243,35 @@
 
 </li>
 </ul>
-<h2 id="实战经验之谈"><a href="#实战经验之谈" class="headerlink" title="实战经验之谈"></a>实战经验之谈</h2><ul>
-<li>消息体太长，会发生截断吗？如果截断，上层应用程序怎么处理？</li>
-<li>kafka分区数能改变吗？如果改变了，怎么保证分区顺序一致；如果不能改变，某个分区挂了怎么办</li>
-<li>consumer rebalance是怎么发生的？最终会如何影响consumer group？</li>
+<h2 id="实战经验之谈"><a href="#实战经验之谈" class="headerlink" title="实战经验之谈"></a>实战经验之谈</h2><h3 id="kafka分区数能改变吗"><a href="#kafka分区数能改变吗" class="headerlink" title="kafka分区数能改变吗"></a>kafka分区数能改变吗</h3><p>首先要看，分区数和哪些概念有关。 </p>
+<ul>
+<li><p><code>Partitioner</code> Producer为每个消息，选择合适的目标Partition</p>
+</li>
+<li><p><code>BalanceStragtegy</code> Consumer Group Leader，把Partitions分派给具体的Consumer进行消费</p>
+</li>
+<li><p>理论上可以按照自己的偏好，随意指定Producer往哪个分区生产消息、Consumer从哪个分区消费消息，不过没有什么必要。</p>
+</li>
+<li><p>Paritioner 是个producer侧的配置，实现对应的接口即可。</p>
+<ul>
+<li>RoundRobin 一个一个循环，可以保证分区数据量比较均衡</li>
+<li>Random 随机，理论上也是均衡生产的</li>
+<li>Hash 根据msg key计算hash，统一个key映射到同一个分区。为了达到“有序消费”，一般会选择这个策略</li>
 </ul>
+</li>
+<li><p>BalanceStragtegy client leader主导，主要是partitions扩容、consumer注册/注销时触发。</p>
+<ul>
+<li>Range 每个consumer，负责连续的n个partitions</li>
+<li>RoundRobin 每个consumer，负责固定step跳跃的n个partitions</li>
+<li>Sticky 每次balance时，尽量沿用之前的分配策略</li>
+</ul>
+</li>
+</ul>
+<p>其实我们并不关心，consumer是否永远绑定到同一批partition：只要某个key的msg，永远可以进入同一个partition即可。在不改变分区数量的情况下，选择hash partitioner就能满足这个需求。</p>
+<p>然后再来看分区数改变的问题。分区数改变将触发consumer leader进行rebalance：</p>
+<p>如果分区数增加，根据hash取模的计算方式，key对应的分区，是有可能发生变更的。<strong>这时如果消费速率较慢，未消费消息积累的越多，越有可能发生： 同一个key，老消息还没消费完，在分区1里；新消息正在生产，在分区2。两个分区对应的consumer完全有可能不相同。</strong>“某个uid的数据，总被一个consumer消费，从而实现有序性”，这个愿望就不可能实现了。</p>
+<p>如果分区数减少，嘿嘿，kafka不允许减少分区！</p>
+<h3 id="消息体太长，会发生截断吗"><a href="#消息体太长，会发生截断吗" class="headerlink" title="消息体太长，会发生截断吗"></a>消息体太长，会发生截断吗</h3><p>如果截断，上层应用程序怎么处理？</p>
+<h3 id="consumer-rebalance是怎么发生的"><a href="#consumer-rebalance是怎么发生的" class="headerlink" title="consumer rebalance是怎么发生的"></a>consumer rebalance是怎么发生的</h3><p>最终会如何影响consumer group？</p>
 
   </div>
 </article>
@@ -271,7 +295,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-SyncProducer"><span class="toc-number">2.</span> <span class="toc-text">Sarama&#x2F;SyncProducer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-ConsumerGroup"><span class="toc-number">3.</span> <span class="toc-text">Sarama&#x2F;ConsumerGroup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%94%A8%E5%88%B0%E7%9A%84%E5%B0%81%E8%A3%85%E7%89%88%E6%9C%AC"><span class="toc-number">4.</span> <span class="toc-text">我用到的封装版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">5.</span> <span class="toc-text">实战经验之谈</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一些概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Broker%E6%8B%93%E6%89%91%E5%9B%BE"><span class="toc-number">1.1.</span> <span class="toc-text">Broker拓扑图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Partition-Leader%E9%80%89%E4%B8%BE%E5%92%8C%E5%A4%8D%E5%88%B6%E5%A4%87%E4%BB%BD"><span class="toc-number">1.2.</span> <span class="toc-text">Partition Leader选举和复制备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-SyncProducer"><span class="toc-number">2.</span> <span class="toc-text">Sarama&#x2F;SyncProducer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sarama-ConsumerGroup"><span class="toc-number">3.</span> <span class="toc-text">Sarama&#x2F;ConsumerGroup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%94%A8%E5%88%B0%E7%9A%84%E5%B0%81%E8%A3%85%E7%89%88%E6%9C%AC"><span class="toc-number">4.</span> <span class="toc-text">我用到的封装版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C%E4%B9%8B%E8%B0%88"><span class="toc-number">5.</span> <span class="toc-text">实战经验之谈</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#kafka%E5%88%86%E5%8C%BA%E6%95%B0%E8%83%BD%E6%94%B9%E5%8F%98%E5%90%97"><span class="toc-number">5.1.</span> <span class="toc-text">kafka分区数能改变吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E4%BD%93%E5%A4%AA%E9%95%BF%EF%BC%8C%E4%BC%9A%E5%8F%91%E7%94%9F%E6%88%AA%E6%96%AD%E5%90%97"><span class="toc-number">5.2.</span> <span class="toc-text">消息体太长，会发生截断吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#consumer-rebalance%E6%98%AF%E6%80%8E%E4%B9%88%E5%8F%91%E7%94%9F%E7%9A%84"><span class="toc-number">5.3.</span> <span class="toc-text">consumer rebalance是怎么发生的</span></a></li></ol></li></ol>
     </div>
 
     <div id="share-footer" style="display: none">
