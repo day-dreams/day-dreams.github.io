@@ -146,6 +146,38 @@ func (c* client)ConsumeClaim(session* ConsumerGroupSession, claim *ConsumerGroup
 
 ## 实战经验之谈
 
-* 消息体太长，会发生截断吗？如果截断，上层应用程序怎么处理？
-* kafka分区数能改变吗？如果改变了，怎么保证分区顺序一致；如果不能改变，某个分区挂了怎么办
-* consumer rebalance是怎么发生的？最终会如何影响consumer group？
+### kafka分区数能改变吗
+
+首先要看，分区数和哪些概念有关。 
+* `Partitioner` Producer为每个消息，选择合适的目标Partition
+* `BalanceStragtegy` Consumer Group Leader，把Partitions分派给具体的Consumer进行消费
+
+* 理论上可以按照自己的偏好，随意指定Producer往哪个分区生产消息、Consumer从哪个分区消费消息，不过没有什么必要。
+* Paritioner 是个producer侧的配置，实现对应的接口即可。
+  * RoundRobin 一个一个循环，可以保证分区数据量比较均衡
+  * Random 随机，理论上也是均衡生产的
+  * Hash 根据msg key计算hash，统一个key映射到同一个分区。为了达到“有序消费”，一般会选择这个策略
+
+* BalanceStragtegy client leader主导，主要是partitions扩容、consumer注册/注销时触发。
+  * Range 每个consumer，负责连续的n个partitions
+  * RoundRobin 每个consumer，负责固定step跳跃的n个partitions
+  * Sticky 每次balance时，尽量沿用之前的分配策略
+
+
+其实我们并不关心，consumer是否永远绑定到同一批partition：只要某个key的msg，永远可以进入同一个partition即可。在不改变分区数量的情况下，选择hash partitioner就能满足这个需求。
+
+
+然后再来看分区数改变的问题。分区数改变将触发consumer leader进行rebalance：
+
+如果分区数增加，根据hash取模的计算方式，key对应的分区，是有可能发生变更的。**这时如果消费速率较慢，未消费消息积累的越多，越有可能发生： 同一个key，老消息还没消费完，在分区1里；新消息正在生产，在分区2。两个分区对应的consumer完全有可能不相同。**“某个uid的数据，总被一个consumer消费，从而实现有序性”，这个愿望就不可能实现了。
+
+
+如果分区数减少，嘿嘿，kafka不允许减少分区！
+
+### 消息体太长，会发生截断吗
+
+如果截断，上层应用程序怎么处理？
+
+### consumer rebalance是怎么发生的
+
+最终会如何影响consumer group？
