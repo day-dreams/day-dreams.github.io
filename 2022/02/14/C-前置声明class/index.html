@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="https:&#x2F;&#x2F;www.ibm.com&#x2F;docs&#x2F;en&#x2F;zos&#x2F;2.3.0?topic&#x3D;only-incomplete-class-declarations-c 编译器在编译头文件时，要计算类大小、函数签名。如果class A有个成员变量class B，那么编译A时要首先编译B。如果刚好class B也引用classA作为成员变量，那么无解了：A、B无限循环引用，A、B的类大小无法确定。此时推荐用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++&#x2F;前置声明class">
+<meta property="og:url" content="http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/index.html">
+<meta property="og:site_name" content="day-dreams">
+<meta property="og:description" content="https:&#x2F;&#x2F;www.ibm.com&#x2F;docs&#x2F;en&#x2F;zos&#x2F;2.3.0?topic&#x3D;only-incomplete-class-declarations-c 编译器在编译头文件时，要计算类大小、函数签名。如果class A有个成员变量class B，那么编译A时要首先编译B。如果刚好class B也引用classA作为成员变量，那么无解了：A、B无限循环引用，A、B的类大小无法确定。此时推荐用">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-02-14T11:42:07.000Z">
+<meta property="article:modified_time" content="2022-02-14T11:42:07.000Z">
+<meta property="article:author" content="day-dreams">
+<meta property="article:tag" content="c++">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>C++/前置声明class</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+      
+<link rel="stylesheet" href="/css/rtl.css">
+
+    
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2022/02/11/LibreOffice%E5%A6%82%E4%BD%95%E7%BB%84%E7%BB%87excel%E5%85%AC%E5%BC%8F%E8%AE%A1%E7%AE%97/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&text=C++/前置声明class"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&is_video=false&description=C++/前置声明class"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++/前置声明class&body=Check out this article: http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&name=C++/前置声明class&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&t=C++/前置声明class"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        C++/前置声明class
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">day-dreams</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-02-14T11:42:07.000Z" itemprop="datePublished">2022-02-14</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/c/" rel="tag">c++</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p><a target="_blank" rel="noopener" href="https://www.ibm.com/docs/en/zos/2.3.0?topic=only-incomplete-class-declarations-c">https://www.ibm.com/docs/en/zos/2.3.0?topic=only-incomplete-class-declarations-c</a></p>
+<p>编译器在编译头文件时，要计算类大小、函数签名。如果class A有个成员变量class B，那么编译A时要首先编译B。如果刚好class B也引用class<br>A作为成员变量，那么无解了：<strong>A、B无限循环引用，A、B的类大小无法确定</strong>。此时推荐用指针引用。因为指针大小是确定的：4个字节或8个。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span>&#123;</span></span><br><span class="line">    B* b;</span><br><span class="line">    <span class="function">B* <span class="title">foo</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span>&#123;</span></span><br><span class="line">    A* a;</span><br><span class="line">    <span class="function">A* <span class="title">foo</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>所以c++这种文件就很操蛋，分离了声明和定义（.h和.cxx）,导致我们不得不去理解编译机制。对比golang，就不存在这种考虑了。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&text=C++/前置声明class"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&is_video=false&description=C++/前置声明class"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++/前置声明class&body=Check out this article: http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&title=C++/前置声明class"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&name=C++/前置声明class&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2022/02/14/C-%E5%89%8D%E7%BD%AE%E5%A3%B0%E6%98%8Eclass/&t=C++/前置声明class"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2021-2022
+    day-dreams
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+
+    <!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+
+<!-- clipboard -->
+
+  
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
