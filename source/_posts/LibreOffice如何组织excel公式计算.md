@@ -1,8 +1,10 @@
 ---
 title: LibreOffice如何组织excel公式计算
 date: 2022-02-11 14:46:15
-tags: excel,LibreOffice
+tags: LibreOffice
 ---
+
+https://github.com/LibreOffice/core
 
 最近在研究excel公式计算，参考了LibreOffice的源码。这里顺手记录一下整个逻辑。
 
@@ -177,25 +179,25 @@ void ScColumn::SetValue( SCROW nRow, double fVal )
 公式求值的本质是[逆波兰表达式求值](https://leetcode-cn.com/problems/evaluate-reverse-polish-notation/)。前文提到的ScFormulaCell::Compile已经构造出了token数组，token数组里**push指令**和**运算符**，以`sum{max{1,2},abs{-9}}`为例：
 * 初始状态
     * token： push 1, push 2, max, push -9, abs, sum
-    * stask: 
+    * stack: 
 * 执行第1个指令
     * token： push 2, max, push -9, abs, sum
-    * stask:  1
+    * stack:  1
 * 执行第2个指令
     * token： max, push -9, abs, sum
-    * stask:  2, 1
+    * stack:  2, 1
 * 执行第3个指令
     * token： push -9, abs, sum
-    * stask:  3
+    * stack:  3
 * 执行第4个指令
     * token： abs, sum
-    * stask:  -9, 3
+    * stack:  -9, 3
 * 执行第5个指令
     * token： sum
-    * stask:  9, 3
+    * stack:  9, 3
 * 执行第6个指令
     * token： 
-    * stask:  12
+    * stack:  12
 
 **至于公式字符串如何编译成token数组，懒得再去扣代码细节。不过跟leetcode应该差不多。**
 
