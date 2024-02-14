@@ -39,9 +39,9 @@ tags: DDIA
     * MVCC通常这样实现：事务带有自增版本号txid，每条数据加上createdby/deletedby两个字段，承载修改/删除当前数据的txid。**查询数据时，通过比较当前事务和数据的createdby/deletedby的大小，决定是否可见。**比如txid13写入了数据a，txid15把a更新为b，那么txid14可以读取到a（因为txid13小于txid14），但是txid14不能获取到数据b（因为txid14小于txid15）。事务提交后，db后台进程会自动回收不需要保存的数据版本。
 
 看起来level2已经很完美了，但是非常遗憾，还有一些未解决的问题。比如：
-    * LostUpdates 两个事务并发的写操作，到底谁生效？
-        * 譬如两个事务都想把一个counter字段+1，但是因为大家的逻辑都是```select counter;got value x;update counter=x+1```，即使已经有了row locks，两个事务执行完毕后，counter还是会变为counter+1，而不是counter+2。这种问题可以通过Atomic Write Operations解决，简单来说就```update counter=counter+1```，两个事务个执行一遍，最后结果变为counter+2。
-        * 对于非counter的场景，比如事务A想把角色a移动到x位置，事务B也想把角色b移动到x位置，他们的逻辑是```select x;check if x is empty;then move a/b to x```。最终结果是A/B都以为成功移动了角色，实际上只有其中一个成功移入到x。这种逻辑可以概括为，查询数据-判断-写入，第三步写入会影响第一步的查询结果。也就是说当我们要查询某个数据然后决定是否修改时，要防止其他事务也做类似的操作。这时就需要引入**显示锁（Explicit Locks）**，也就是```select x for update```，在事务A执行第一步查询数据时，直接加锁，这样事务B就需要等待了。
-    * Write Skew and Phantoms
+  * LostUpdates 两个事务并发的写操作，到底谁生效？
+    * 譬如两个事务都想把一个counter字段+1，但是因为大家的逻辑都是```select counter;got value x;update counter=x+1```，即使已经有了row locks，两个事务执行完毕后，counter还是会变为counter+1，而不是counter+2。这种问题可以通过Atomic Write Operations解决，简单来说就```update counter=counter+1```，两个事务个执行一遍，最后结果变为counter+2。
+    * 对于非counter的场景，比如事务A想把角色a移动到x位置，事务B也想把角色b移动到x位置，他们的逻辑是```select x;check if x is empty;then move a/b to x```。最终结果是A/B都以为成功移动了角色，实际上只有其中一个成功移入到x。这种逻辑可以概括为，查询数据-判断-写入，第三步写入会影响第一步的查询结果。也就是说当我们要查询某个数据然后决定是否修改时，要防止其他事务也做类似的操作。这时就需要引入**显示锁（Explicit Locks）**，也就是```select x for update```，在事务A执行第一步查询数据时，直接加锁，这样事务B就需要等待了。
+  * Write Skew and Phantoms
 
 ## Serializability 可串行化-新的思路待检验
