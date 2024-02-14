@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="年少时阅读mysql文档，被事务机制困扰了不少。总觉得是一种死记硬背的知识，现在发现并不是。 这篇blog的脉络是：探讨基本的ACID概念，然后探讨Isolation面临的问题和解法。 TransactionsACID 基本概念事务由一系列读写操作组合在一起，主要关注数据库能给这些读写操作提供什么保证。  Atomic 原子性 保证读写操作必须全部执行成功，或者全部失败（被回滚 Rollback&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDIA Chapter7 Transctions 谈谈当年不太理解的知识">
+<meta property="og:url" content="http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/index.html">
+<meta property="og:site_name" content="day-dreams">
+<meta property="og:description" content="年少时阅读mysql文档，被事务机制困扰了不少。总觉得是一种死记硬背的知识，现在发现并不是。 这篇blog的脉络是：探讨基本的ACID概念，然后探讨Isolation面临的问题和解法。 TransactionsACID 基本概念事务由一系列读写操作组合在一起，主要关注数据库能给这些读写操作提供什么保证。  Atomic 原子性 保证读写操作必须全部执行成功，或者全部失败（被回滚 Rollback&#x2F;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-02-14T21:46:45.000Z">
+<meta property="article:modified_time" content="2024-02-14T21:46:45.000Z">
+<meta property="article:author" content="day-dreams">
+<meta property="article:tag" content="DDIA">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>DDIA Chapter7 Transctions 谈谈当年不太理解的知识</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+      
+<link rel="stylesheet" href="/css/rtl.css">
+
+    
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2022/03/19/C-%E5%86%99%E4%B8%80%E4%B8%AAclass%E8%A6%81%E6%B3%A8%E6%84%8F%E4%BB%80%E4%B9%88/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&text=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&is_video=false&description=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=DDIA Chapter7 Transctions 谈谈当年不太理解的知识&body=Check out this article: http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&name=DDIA Chapter7 Transctions 谈谈当年不太理解的知识&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&t=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Transactions"><span class="toc-number">1.</span> <span class="toc-text">Transactions</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#ACID-%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-number">1.1.</span> <span class="toc-text">ACID 基本概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Weak-Isolation-Levels-%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB-%E5%89%8D%E4%BA%BA%E7%9A%84%E4%B8%80%E4%BA%9B%E5%8A%AA%E5%8A%9B"><span class="toc-number">1.2.</span> <span class="toc-text">Weak Isolation Levels 隔离级别-前人的一些努力</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Serializability-%E5%8F%AF%E4%B8%B2%E8%A1%8C%E5%8C%96-%E6%96%B0%E7%9A%84%E6%80%9D%E8%B7%AF%E5%BE%85%E6%A3%80%E9%AA%8C"><span class="toc-number">1.3.</span> <span class="toc-text">Serializability 可串行化-新的思路待检验</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E8%B4%A8%E6%9C%B4%E7%9A%84%E6%83%B3%E6%B3%95%EF%BC%9A%E7%9C%9F%E7%9A%84%E8%B4%AF%E5%BD%BB%E4%B8%B2%E8%A1%8C%E5%8C%96%E6%80%9D%E6%83%B3%EF%BC%88Actual-Serial-Excution%EF%BC%89"><span class="toc-number">1.3.1.</span> <span class="toc-text">最质朴的想法：真的贯彻串行化思想（Actual Serial Excution）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8A%B1%E5%93%A8%E7%9A%84%E6%83%B3%E6%B3%95%EF%BC%9A%E4%BA%8C%E9%98%B6%E6%AE%B5%E9%94%81%EF%BC%88Two-Phase-Locks%EF%BC%8C2PL%EF%BC%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">花哨的想法：二阶段锁（Two Phase Locks，2PL）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8D%A2%E4%B8%AA%E4%B9%90%E8%A7%82%E6%B3%A8%E6%84%8F%E7%9A%84%E6%83%B3%E6%B3%95%EF%BC%9A%E4%B8%B2%E8%A1%8C%E5%BF%AB%E7%85%A7%E9%9A%94%E7%A6%BB%EF%BC%88Serialzable-Snapshot-Isolation%EF%BC%8C-SSI%EF%BC%89"><span class="toc-number">1.3.3.</span> <span class="toc-text">换个乐观注意的想法：串行快照隔离（Serialzable Snapshot Isolation， SSI）</span></a></li></ol></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        DDIA Chapter7 Transctions 谈谈当年不太理解的知识
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">day-dreams</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-02-14T21:46:45.000Z" itemprop="datePublished">2024-02-14</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/DDIA/" rel="tag">DDIA</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>年少时阅读mysql文档，被事务机制困扰了不少。总觉得是一种死记硬背的知识，现在发现并不是。</p>
+<p>这篇blog的脉络是：探讨基本的ACID概念，然后探讨Isolation面临的问题和解法。</p>
+<h1 id="Transactions"><a href="#Transactions" class="headerlink" title="Transactions"></a>Transactions</h1><h2 id="ACID-基本概念"><a href="#ACID-基本概念" class="headerlink" title="ACID 基本概念"></a>ACID 基本概念</h2><p>事务由一系列读写操作组合在一起，主要关注数据库能给这些读写操作提供什么保证。</p>
+<ul>
+<li>Atomic 原子性<ul>
+<li>保证读写操作必须全部执行成功，或者全部失败（被回滚 Rollback/Abort，对db没有任何影响）</li>
+</ul>
+</li>
+<li>Consistence 一致性<ul>
+<li>保证数据状态完好无损。</li>
+<li>一方面，db可以保证数据取值遵循约定好的规则（长度/大小等），如果违反规则，拒绝存储</li>
+<li>另一方面，db的使用者（Application）必须保证，数据写入之后，整体状态没有损坏。比如Application约定只能有10个获奖者，结果自己写入了11个，这是违反一致性的。</li>
+<li><strong>这个特性更多偏向Application，跟DB没什么关系。db只能保证基本的数据类型不被违反，但是不理解数据的含义；需要Application自己定义什么是“状态完好无损”。</strong></li>
+</ul>
+</li>
+<li>Isolation 隔离<ul>
+<li>关注不同事务之间的读写操作如何相互影响，这也是我们最感兴趣的和最复杂的点。</li>
+</ul>
+</li>
+<li>Durability 持久性<ul>
+<li>保证数据被db完毕后，可以一直保存不出问题。</li>
+<li>其实这是不可能的，db只能在有限的条件下保证：如果磁盘/电源等不出问题，那么单机数据永不丢失；如果集群节点大部分可用，那么数据在集群范围内可用。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Weak-Isolation-Levels-隔离级别-前人的一些努力"><a href="#Weak-Isolation-Levels-隔离级别-前人的一些努力" class="headerlink" title="Weak Isolation Levels 隔离级别-前人的一些努力"></a>Weak Isolation Levels 隔离级别-前人的一些努力</h2><p>其实主要就是探讨Isolation。db为了保证隔离性，需要做出很多努力，才能达到一定程度的隔离性；不同事务的读写操作会相互影响，在不同的隔离级别下带来不同的问题。</p>
+<ul>
+<li>level0 什么也不做<ul>
+<li>完全没有隔离可言。一个事务的写操作可以被另一个事务里的读操作观察到，Application将拥有一个不稳定的db，随时爆炸。</li>
+</ul>
+</li>
+<li>level1 Read Committed 读已提交<ul>
+<li>针对level0，事务A读取到了事务B的数据（Dirty Read，脏读），我们自然想到要对事务A屏蔽事务B的写操作。这很好实现，经典做法就是保存数据的2个版本：事务A把数据从version 1更新到version 2后，只要事务A未提交，事务B就只能读取到version 1，而不是version2；等到事务A提交完成，db在把version1干掉，只保留version。这个机制叫做<strong>Snapshot version of old data</strong>。</li>
+<li>针对两个事务的写操作，还要保证它们不要相互影响。典型场景是，事务A/B分别要把2个字段更新为Value1/Value2 Value3/Value4，如果它们互不影响，最终的数据应该是Value1/Value2 or Value3/Value4，两种可能；但是犹豫更新顺序、时机不同，最终结果可能是A/B混合在一起，比如Value1/Value4 or Value3/Value2，此时数据已经坏掉了。这种称为脏写(Dirty Write)。一个简单的解决办法是加锁，比如Mysql/Innodb有row locks，写数据时获得锁，事务完成后释放锁，如此就不会发生Dirty Write。</li>
+</ul>
+</li>
+<li>level2 Repeatable Read 可重复读<ul>
+<li>level1是有缺陷的，比如事务A第一次读取到了数据x，但是事务B把x更新为y并完成提交，此时事务A再去读取，会获得数据y。此问题成为不可重复度（Unrepeatable Read），数据变成非常不稳定的状态。类似level1引入的snapshot，我们再引入多个版本，只要不主动修改，每个事务里读取的数据总是不变。即多版本控制，（MVCC Multi Version Concurrency Control）</li>
+<li>MVCC通常这样实现：事务带有自增版本号txid，每条数据加上createdby/deletedby两个字段，承载修改/删除当前数据的txid。<strong>查询数据时，通过比较当前事务和数据的createdby/deletedby的大小，决定是否可见。</strong>比如txid13写入了数据a，txid15把a更新为b，那么txid14可以读取到a（因为txid13小于txid14），但是txid14不能获取到数据b（因为txid14小于txid15）。事务提交后，db后台进程会自动回收不需要保存的数据版本。</li>
+</ul>
+</li>
+</ul>
+<p>看起来level2已经很完美了，但是非常遗憾，还有一些未解决的问题。比如：</p>
+<ul>
+<li>LostUpdates 两个事务并发的写操作，到底谁生效？<ul>
+<li>譬如两个事务都想把一个counter字段+1，但是因为大家的逻辑都是<code>select counter;got value x;update counter=x+1</code>，即使已经有了row locks，两个事务执行完毕后，counter还是会变为counter+1，而不是counter+2。这种问题可以通过Atomic Write Operations解决，简单来说就<code>update counter=counter+1</code>，两个事务个执行一遍，最后结果变为counter+2。</li>
+<li>对于非counter的场景，比如事务A想把角色a移动到x位置，事务B也想把角色b移动到x位置，他们的逻辑是<code>select x;check if x is empty;then move a/b to x</code>。最终结果是A/B都以为成功移动了角色，实际上只有其中一个成功移入到x。这种逻辑可以概括为，查询数据-判断-写入，第三步写入会影响第一步的查询结果。也就是说当我们要查询某个数据然后决定是否修改时，要防止其他事务也做类似的操作。这时就需要引入<strong>显示锁（Explicit Locks）</strong>，也就是<code>select x for update</code>，在事务A执行第一步查询数据时，直接加锁，这样事务B就需要等待了。</li>
+</ul>
+</li>
+<li>Write Skew and Phantoms，幻读问题<ul>
+<li>再次遗憾，<code>select for udpate</code>并不能解决所有LostUpdates问题。比如没有匹配到的selelct结果，也就无法加显式锁了。试想这样的场景，事务A查询是否有20-25岁的参赛者，如果没有就把青年组球赛取消；事务B向db增加一位23岁参赛选手。事务A并不能锁出20-25这个条件下的对象，因为这样的对象还不存在；等到事务A查询完成，事务B提交完成，A再去取消青年组就不合适了。如果事务A重续查询20-25这个条件，会发现莫名其妙出现一位新选手，这就是幻读问题：<strong>db在此刻变得前后不一致了，隔离性再次被打破。</strong></li>
+</ul>
+</li>
+</ul>
+<p>不过我们依然有解决方案，就是锁住20-25这个并不存在的数据。</p>
+<ul>
+<li>预测锁 （Predicate Locks）。我们直接把查询条件作为一种锁，当事务A使用了20-25这个条件，我们为它建立一个锁X；事务B插入数据时，我们检查这个数据是否命中X的条件，如果命中，就等待事务A完成，再继续查询。如此就锁住了“不存在的数据“。<br>如果db处理的事务相对简单，这种方法很有效。不过随着查询条件复杂化，以及长事务的增多，预测锁会带来性能问题：每个select都要去检查是否命中条件，这是一件非常消耗CPU时间的事情。</li>
+<li>间隙锁（Index Lock, or Next-Key lock）。鉴于大部分ACID db都基于B树索引，select查询又和B树索引的某些区间匹配，那么把这些区间的启始key锁住，其他任何发生在这个区间里的写入操作都需要等待间隙锁释放才能完成。如此，我们在写入数据时，不必再参考各种奇怪的预测锁（它们的命中条件往往需要一些计算工作），而是直接看当前索引区间是否被锁住。这也是Mysql/Innodb在做的事情。</li>
+</ul>
+<p>现在我们有了行级别的读写锁/快照机制/间隙锁，看起来已经足够解决各种隔离问题。但是这些工具带来另一个问题：我们作为Appliercation的开发者，真的能自如使用这些复杂工具么？比如发生死锁怎么去排查？如果我的代码里充斥着<code>select xxx for update</code> / <code>这里使用了间隙锁特性</code> 类似的sql和注释，那简直太令人头疼了，都不好去debug。</p>
+<p>如果不想应对这些锁带来的复杂度，有两个办法：<strong>提高设计，我们不要引入这些竞争和隔离问题，尽量减少可能冲突的场景，我认为这是最合理的路线</strong>；另一个办法是db提供帮助，直接进入到level3，串行化！</p>
+<h2 id="Serializability-可串行化-新的思路待检验"><a href="#Serializability-可串行化-新的思路待检验" class="headerlink" title="Serializability 可串行化-新的思路待检验"></a>Serializability 可串行化-新的思路待检验</h2><p>db领域有大量的天才，他们提出<strong>可串行化</strong>这个词：虽然多个事务同时进行读写，但是db保证最终效果和串行执行相同。实现方法也有三个。</p>
+<h3 id="最质朴的想法：真的贯彻串行化思想（Actual-Serial-Excution）"><a href="#最质朴的想法：真的贯彻串行化思想（Actual-Serial-Excution）" class="headerlink" title="最质朴的想法：真的贯彻串行化思想（Actual Serial Excution）"></a>最质朴的想法：真的贯彻串行化思想（Actual Serial Excution）</h3><p>不允许并发执行事务。这种想法在某些领域是可行的，特别是当内存变得cheap，No-SQL领域可以把数据完全存储在内存，串行可能带来更高的效率。比如Redis就是这样。可以还有很多关系型DB，面对的是TB级别数据，完全无法忍受串行带来的效率降低。</p>
+<h3 id="花哨的想法：二阶段锁（Two-Phase-Locks，2PL）"><a href="#花哨的想法：二阶段锁（Two-Phase-Locks，2PL）" class="headerlink" title="花哨的想法：二阶段锁（Two Phase Locks，2PL）"></a>花哨的想法：二阶段锁（Two Phase Locks，2PL）</h3><p>事务A在读取数据时，把查询结果加上读锁；如果事务A后来需要更新他们，就把读锁升级为写锁；当事务A完成时，释放所有读写锁。如果有事务B在同步执行，他必须等待事务A获得的写锁完全释放，才能执行查询操作；而事务B的写操作，也要等待事务A的所有读/写锁释放才能进行。在Mysql/Innodb的默认配置，也就是可重复读的级别下，引入了2PL。</p>
+<p>但是2PL会带来性能问题：加锁/释放本来就有一定开销；特别是db负载较高时，死锁概率升高，很可能事务A经过了大量操作后，突然发现死锁，需要回滚再重试，这带来了额外的开销（<strong>所以重试其实并不是什么灵丹妙药！</strong>）。</p>
+<p>2PL一般搭配着间隙锁的概念实现，至少Mysql官方文档是这样描述他们的InnoDB。描述归描述，我们其实没有必要掌握着么细节的东西，还是得从根本上解决问题（也就是设计角度）。</p>
+<h3 id="换个乐观注意的想法：串行快照隔离（Serialzable-Snapshot-Isolation，-SSI）"><a href="#换个乐观注意的想法：串行快照隔离（Serialzable-Snapshot-Isolation，-SSI）" class="headerlink" title="换个乐观注意的想法：串行快照隔离（Serialzable Snapshot Isolation， SSI）"></a>换个乐观注意的想法：串行快照隔离（Serialzable Snapshot Isolation， SSI）</h3><p>前文描述的各种锁，其实是悲观主义的产物：我们总是认为会发生冲突和隔离问题，所以强制加锁。对应的，我们还有一种乐观的想法：我们认为不会发生冲突和隔离问题，所以在数据更新时只是简单记录下这个事件，等到有查询用到被更新的数据，再去判断是否有隔离问题。</p>
+<p>到这一步，我本人已经不想继续学习了。过于复杂的机制，完全让人无法把握！DDIA也说明，这是一种新兴的可串行化实现算法，还在被实践检验的阶段（虽然DDIA是偏乐观的态度）。如果将来的开发者时时刻刻要考虑这个隔离级别的实现细节，那是不可能承受的复杂度！但是从学习的角度，还是可以探讨下。。</p>
+<p>那么如何“判断是否有隔离问题”？有两种场景：</p>
+<ul>
+<li>Detecting Stale MVCC reads。基于MVCC读取数据时，我们记录下有哪些过于新的txid，等到事务提交时，再去见检查这些txid是否已经提交完成。如果已经提交，那么当前事务使用了陈旧的MVCC版本（stale），需要回滚当前事务。</li>
+<li>Detecting Writes that affect prior reads。事务在写数据时，主动通知读取了对应数据的事务。注意这里只是简单的通知而已，并不会阻塞或者导致回滚。这个机制完全是为了补充上一条。</li>
+</ul>
+<p>好了，SSI已经十分复杂。对比2PL，SSI总是在事务提交时去检查冲突，如果冲突较少，会使得大部分的事务保持相对短的处理事件，这挺棒的；对比Actual Serial Execution，它提高了效率，只要cpu数量得到扩展，SSI就能跟着提高性能。SSI真棒！（谁愿意谁实现吧，老旧的Mysql估计是不会改变的）。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Transactions"><span class="toc-number">1.</span> <span class="toc-text">Transactions</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#ACID-%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-number">1.1.</span> <span class="toc-text">ACID 基本概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Weak-Isolation-Levels-%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB-%E5%89%8D%E4%BA%BA%E7%9A%84%E4%B8%80%E4%BA%9B%E5%8A%AA%E5%8A%9B"><span class="toc-number">1.2.</span> <span class="toc-text">Weak Isolation Levels 隔离级别-前人的一些努力</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Serializability-%E5%8F%AF%E4%B8%B2%E8%A1%8C%E5%8C%96-%E6%96%B0%E7%9A%84%E6%80%9D%E8%B7%AF%E5%BE%85%E6%A3%80%E9%AA%8C"><span class="toc-number">1.3.</span> <span class="toc-text">Serializability 可串行化-新的思路待检验</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E8%B4%A8%E6%9C%B4%E7%9A%84%E6%83%B3%E6%B3%95%EF%BC%9A%E7%9C%9F%E7%9A%84%E8%B4%AF%E5%BD%BB%E4%B8%B2%E8%A1%8C%E5%8C%96%E6%80%9D%E6%83%B3%EF%BC%88Actual-Serial-Excution%EF%BC%89"><span class="toc-number">1.3.1.</span> <span class="toc-text">最质朴的想法：真的贯彻串行化思想（Actual Serial Excution）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8A%B1%E5%93%A8%E7%9A%84%E6%83%B3%E6%B3%95%EF%BC%9A%E4%BA%8C%E9%98%B6%E6%AE%B5%E9%94%81%EF%BC%88Two-Phase-Locks%EF%BC%8C2PL%EF%BC%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">花哨的想法：二阶段锁（Two Phase Locks，2PL）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8D%A2%E4%B8%AA%E4%B9%90%E8%A7%82%E6%B3%A8%E6%84%8F%E7%9A%84%E6%83%B3%E6%B3%95%EF%BC%9A%E4%B8%B2%E8%A1%8C%E5%BF%AB%E7%85%A7%E9%9A%94%E7%A6%BB%EF%BC%88Serialzable-Snapshot-Isolation%EF%BC%8C-SSI%EF%BC%89"><span class="toc-number">1.3.3.</span> <span class="toc-text">换个乐观注意的想法：串行快照隔离（Serialzable Snapshot Isolation， SSI）</span></a></li></ol></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&text=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&is_video=false&description=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=DDIA Chapter7 Transctions 谈谈当年不太理解的知识&body=Check out this article: http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&title=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&name=DDIA Chapter7 Transctions 谈谈当年不太理解的知识&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2024/02/14/DDIA-Chapter7-Transctions-%E8%B0%88%E8%B0%88%E5%BD%93%E5%B9%B4%E4%B8%8D%E5%A4%AA%E7%90%86%E8%A7%A3%E7%9A%84%E7%9F%A5%E8%AF%86/&t=DDIA Chapter7 Transctions 谈谈当年不太理解的知识"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2021-2024
+    day-dreams
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+
+    <!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+
+<!-- clipboard -->
+
+  
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
